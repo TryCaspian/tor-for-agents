@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "anet"
-version = "0.0.4"
+version = "0.0.5"
 description = "An anonymous, Tor-based overlay for agents: onion-service identity, encrypted groups, discovery, and browsing."
 readme = "README.md"
 requires-python = ">=3.10"

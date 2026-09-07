@@ -17,6 +17,7 @@ from .directory import (
     query,
 )
 from .browse import TorBrowser, Page, html_to_text
+from .attest import verify_attestation, report_data_for, AttestationError
 
 __all__ = [
     "Agent",
@@ -42,5 +43,8 @@ __all__ = [
     "TorBrowser",
     "Page",
     "html_to_text",
+    "verify_attestation",
+    "report_data_for",
+    "AttestationError",
 ]
-__version__ = "0.0.4"
+__version__ = "0.0.5"

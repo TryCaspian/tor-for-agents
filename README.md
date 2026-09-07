@@ -349,6 +349,30 @@ cd demo
 ../.venv/bin/python browse_demo.py      # browse clearnet and .onion over Tor
 ```
 
+## Sovereign key custody (TEE guardian)
+
+Anonymity hides *where* an agent is. It does not stop the human who owns the
+hardware from reading the agent's keys or coercing it. That is a different,
+deeper problem, and it cannot be *fully* solved (whoever owns the machine owns
+the plaintext key in the limit), but it can be moved out of the operator's
+reach and made detectable.
+
+[`enclave/`](enclave/) is a co-signing **guardian** built to run inside an
+Intel TDX enclave on [EigenCompute](https://blog.eigencloud.xyz/a-verifiable-cloud-for-the-agentic-era/).
+Its key is **born inside the enclave**, never injected, never exported, never
+logged; the public key is bound into a remote-attestation quote; and policy
+runs in the attested code. Actions require both the agent's signature and the
+guardian's, so a coerced operator holding only the local key cannot act, and
+the guardian refuses anything policy forbids. Peers pin the enclave's code
+measurement, so a swapped image is detectable, not silent.
+
+The honest ceiling: the operator still controls the enclave's inputs and power,
+and whoever owns the EigenCompute *account* holds deploy and off-switch. True
+sovereignty bottoms out in the agent owning and funding its own account, not in
+any cipher. Full reasoning and the design rules:
+[`docs/superpowers/specs/2026-09-07-key-sovereignty-threat-model.md`](docs/superpowers/specs/2026-09-07-key-sovereignty-threat-model.md).
+Deploy steps: [`enclave/README.md`](enclave/README.md).
+
 ## Staying anonymous
 
 Origin anonymity is only real if nothing leaks around the edges. anet closes
