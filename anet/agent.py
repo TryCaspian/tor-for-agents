@@ -95,6 +95,9 @@ class Agent:
         self._server = None
         self._accept_thread = None
         self._stop = threading.Event()
+        # A per-agent Tor stream-isolation token: this agent's outbound and
+        # dialed traffic rides its own circuits, unlinkable from other agents.
+        self._iso = os.urandom(8).hex()
 
     def _wrap(self, handler):
         """Answer the built-in whoami op ourselves; delegate everything else."""
@@ -170,15 +173,19 @@ class Agent:
 
     # -- dialing ---------------------------------------------------------
     def dial(self, address, timeout: float = 60.0) -> Session:
-        """Open a session to a peer agent by onion address."""
+        """Open a session to a peer agent by onion address, on this agent's
+        own isolated circuit lane."""
         addr = address.address if isinstance(address, Identity) else address
-        sock = self._tor.dial(addr, virtual_port=VIRTUAL_PORT, timeout=timeout)
+        sock = self._tor.dial(
+            addr, virtual_port=VIRTUAL_PORT, timeout=timeout, isolation=self._iso
+        )
         return Session(sock)
 
     # -- outbound --------------------------------------------------------
     def fetch(self, url: str, timeout: float = 60.0) -> str:
-        """Fetch a clearnet URL with the origin hidden behind Tor."""
-        return self._tor.socks_get(url, timeout=timeout)
+        """Fetch a clearnet URL with the origin hidden behind Tor (remote DNS,
+        uniform headers, this agent's isolated circuit)."""
+        return self._tor.socks_get(url, timeout=timeout, isolation=self._iso)
 
     def browse(self, url: str, timeout: float = 60.0):
         """Browse a page (clearnet or .onion) over Tor and get a structured
@@ -186,7 +193,38 @@ class Agent:
         WebFetch."""
         from .browse import TorBrowser
 
-        return TorBrowser(self._tor, timeout=timeout).open(url)
+        return TorBrowser(self._tor, timeout=timeout, isolation=self._iso).open(url)
+
+    def new_identity(self):
+        """Rotate this agent's circuits: fresh Tor paths for subsequent
+        traffic, unlinkable from what it did before. Like Tor Browser's
+        'New Identity', but scoped to this agent so it does not disturb others."""
+        self._iso = os.urandom(8).hex()
+
+    def check_anonymity(self, timeout: float = 30.0) -> dict:
+        """Self-test the outbound path: confirm traffic exits via Tor and that
+        the exit IP is not the real one. Fails closed: if Tor is down, the
+        Tor fetch errors rather than leaking a direct connection."""
+        import httpx
+
+        result = {"dns": "remote (socks5h)", "headers": "uniform Tor-Browser UA"}
+        try:
+            direct = httpx.get("https://api.ipify.org", timeout=timeout).text.strip()
+        except Exception:
+            direct = None
+        result["real_ip"] = direct
+
+        exit_ip = self.fetch("https://api.ipify.org", timeout=timeout).strip()
+        result["tor_exit_ip"] = exit_ip
+        result["origin_hidden"] = bool(exit_ip) and exit_ip != direct
+
+        try:
+            page = self.browse("https://check.torproject.org/", timeout=timeout)
+            result["tor_confirmed"] = "Congratulations" in page.text
+        except Exception as exc:
+            result["tor_confirmed"] = False
+            result["check_error"] = str(exc)
+        return result
 
     # -- lifecycle -------------------------------------------------------
     def stop(self):

@@ -76,6 +76,24 @@ def anet_status() -> dict:
 
 
 @mcp.tool(
+    description="Self-test anonymity: confirm outbound traffic exits via Tor and "
+    "that the exit IP differs from the real one. Use to verify the agent is "
+    "actually anonymous before doing sensitive work."
+)
+def anet_check() -> dict:
+    return S.agent().check_anonymity()
+
+
+@mcp.tool(
+    description="Rotate to fresh Tor circuits (like Tor Browser's 'New Identity'). "
+    "Subsequent requests are unlinkable from earlier ones."
+)
+def anet_new_identity() -> dict:
+    S.ensure_tor().new_identity()
+    return {"ok": True, "rotated": True}
+
+
+@mcp.tool(
     description="Browse a web page over Tor (clearnet or .onion). Returns status, "
     "title, readable text, and links. Origin is hidden; page content is still "
     "visible to the destination."

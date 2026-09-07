@@ -16,7 +16,7 @@
   ·
   <a href="#mcp-server">MCP</a>
   ·
-  <a href="#honest-limitations">Limits</a>
+  <a href="#staying-anonymous">Anonymity</a>
 </p>
 
 <p align="center">
@@ -348,6 +348,46 @@ cd demo
 ../.venv/bin/python directory_demo.py   # a stranger discovers a service and transacts
 ../.venv/bin/python browse_demo.py      # browse clearnet and .onion over Tor
 ```
+
+## Staying anonymous
+
+Origin anonymity is only real if nothing leaks around the edges. anet closes
+the ones that matter and is honest about the ones no overlay can:
+
+**What anet does for you**
+
+- **No DNS leak.** Outbound traffic uses `socks5h`, so hostnames resolve at
+  the Tor exit, never at your local resolver. (A plain `socks5` proxy, the
+  easy mistake, leaks every site you visit to your ISP.)
+- **Uniform fingerprint.** Every request carries the same Tor-Browser
+  `User-Agent` and a fixed, minimal header set, so an anet agent looks like
+  any Tor Browser user, not like `python-httpx/x.y`. Verified on the wire.
+- **Per-agent circuit isolation.** Each agent rides its own Tor circuits
+  (`IsolateSOCKSAuth`), so one agent's web traffic and dials can't be linked
+  to another's by a shared exit.
+- **New Identity on demand.** `agent.new_identity()` / `anet newnym` /
+  `torfetch --new-identity` rotate to fresh circuits, unlinkable from before.
+- **Fail-closed.** If Tor is down, `fetch`/`browse` error out. There is no
+  silent fallback to a direct connection.
+- **Self-check.** `anet check` (or `torfetch --check`) confirms the exit IP
+  differs from your real one and that Tor is actually in the path:
+
+  ```json
+  { "dns": "remote (socks5h)", "real_ip": "103.x.x.x",
+    "tor_exit_ip": "185.129.61.8", "origin_hidden": true, "tor_confirmed": true }
+  ```
+
+**What no overlay can do for you** — the residual risks, stated plainly:
+
+- **Content is not hidden from the destination.** A site or LLM API still
+  sees what you send; it just can't tie it to your IP. Don't put identifying
+  data in the request body.
+- **Don't log in.** Authenticating to a personal account over Tor links that
+  account to the activity. Anonymity is about *not* carrying identity.
+- **Traffic analysis and timing** are outside any single client's control. A
+  global adversary correlating flows is Tor's known limit, and ours.
+- **A stolen key is its owner.** As in Tor, whoever holds an agent's key is
+  that agent. Guard content keys.
 
 ## Honest limitations
 

@@ -179,6 +179,18 @@ def _dial_once(agent, onion, msg):
         return sess.request(msg)
 
 
+def cmd_check(args):
+    node = _boot(args.quiet)
+    try:
+        result = Agent(node, label="cli").check_anonymity()
+        print(json.dumps(result, indent=2))
+        ok = result.get("origin_hidden") and result.get("tor_confirmed")
+        print("\nAnonymous ✓" if ok else "\nNOT fully anonymous ✗", file=sys.stderr)
+        return 0 if ok else 2
+    finally:
+        node.close()
+
+
 # -- parser ------------------------------------------------------------
 def build_parser():
     p = argparse.ArgumentParser(prog="anet", description="anonymous overlay for agents")
@@ -215,6 +227,9 @@ def build_parser():
     q.add_argument("--service")
     q.add_argument("--tag")
     q.set_defaults(func=cmd_query)
+
+    c = sub.add_parser("check", help="self-test that traffic is anonymous over Tor")
+    c.set_defaults(func=cmd_check)
 
     a = sub.add_parser("announce", help="announce a service to a directory")
     a.add_argument("onion", help="the directory's onion address")

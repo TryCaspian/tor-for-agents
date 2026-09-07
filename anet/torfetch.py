@@ -74,18 +74,41 @@ def ensure_daemon(boot_timeout=150) -> bool:
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog="torfetch", description="WebFetch over Tor")
-    p.add_argument("url", help="a URL (clearnet or .onion), or an onion for --dial")
+    p.add_argument("url", nargs="?", help="a URL (clearnet or .onion), or an onion for --dial")
     p.add_argument("--raw", action="store_true", help="raw body instead of readable text")
     p.add_argument("--links", action="store_true", help="also print extracted links")
     p.add_argument("--json", action="store_true", help="print the full JSON response")
     p.add_argument("--dial", metavar="JSON", help="call an agent: JSON request object")
+    p.add_argument("--check", action="store_true", help="self-test anonymity and exit")
+    p.add_argument("--new-identity", action="store_true",
+                   help="rotate to fresh Tor circuits before fetching")
     p.add_argument("--limit", type=int, default=6000, help="max chars of text to print")
     args = p.parse_args(argv)
+
+    if not args.check and not args.url:
+        print("torfetch: a url is required (or use --check)", file=sys.stderr)
+        return 1
 
     if not ensure_daemon():
         print("torfetch: daemon did not become ready in time (see ~/.anet/daemon.log)",
               file=sys.stderr)
         return 3
+
+    if args.new_identity:
+        try:
+            _call("POST", "/newnym", {})
+            print("torfetch: rotated to fresh Tor circuits", file=sys.stderr)
+        except urllib.error.URLError as e:
+            print(f"torfetch: could not rotate identity: {e}", file=sys.stderr)
+
+    if args.check:
+        try:
+            _, obj = _call("GET", "/check")
+        except urllib.error.URLError as e:
+            print(f"torfetch: check failed: {e}", file=sys.stderr)
+            return 2
+        print(json.dumps(obj, indent=2))
+        return 0 if obj.get("ok") and obj.get("origin_hidden") else 2
 
     try:
         if args.dial is not None:

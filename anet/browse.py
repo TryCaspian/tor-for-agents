@@ -98,13 +98,15 @@ class TorBrowser:
     """Browse the web through a TorNode's SOCKS exit. Handles clearnet and
     .onion identically, because Tor resolves both over SOCKS."""
 
-    def __init__(self, tor, timeout: float = 60.0, max_bytes: int = 5_000_000):
+    def __init__(self, tor, timeout: float = 60.0, max_bytes: int = 5_000_000,
+                 isolation: str | None = None):
         self._tor = tor
         self._timeout = timeout
         self._max_bytes = max_bytes
+        self._iso = isolation
 
     def open(self, url: str, resolve_links: bool = True) -> Page:
-        with self._tor.http_client(timeout=self._timeout) as client:
+        with self._tor.http_client(timeout=self._timeout, isolation=self._iso) as client:
             resp = client.get(url, follow_redirects=True)
         ctype = resp.headers.get("content-type", "").split(";")[0].strip()
         body = resp.text[: self._max_bytes]

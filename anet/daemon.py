@@ -78,6 +78,12 @@ class Backend:
         with agent.dial(address) as sess:
             return sess.request(request)
 
+    def check(self) -> dict:
+        return self._require_agent().check_anonymity()
+
+    def new_identity(self) -> None:
+        self._require_agent().new_identity()
+
     def close(self):
         with self._lock:
             if self._tor is not None:
@@ -103,6 +109,20 @@ def dispatch(backend: Backend, method: str, path: str, body: dict):
             return 200, {"ok": True, **backend.browse(url)}
         except Exception as exc:
             return 502, {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+
+    if method == "GET" and path == "/check":
+        if not backend.ready():
+            return 503, {"ok": False, "error": "tor is still booting; retry shortly"}
+        try:
+            return 200, {"ok": True, **backend.check()}
+        except Exception as exc:
+            return 502, {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+
+    if method == "POST" and path == "/newnym":
+        if not backend.ready():
+            return 503, {"ok": False, "error": "tor is still booting; retry shortly"}
+        backend.new_identity()
+        return 200, {"ok": True, "rotated": True}
 
     if method == "POST" and path == "/dial":
         address = (body or {}).get("address")

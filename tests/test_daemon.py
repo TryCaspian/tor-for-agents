@@ -27,6 +27,12 @@ class FakeBackend:
     def dial(self, address, request):
         return {"echo": request, "to": address}
 
+    def check(self):
+        return {"origin_hidden": True, "tor_confirmed": True, "tor_exit_ip": "1.2.3.4"}
+
+    def new_identity(self):
+        self.rotated = True
+
 
 def test_status_reports_ready():
     code, obj = dispatch(FakeBackend(ready=True), "GET", "/status", {})
@@ -78,3 +84,19 @@ def test_dial_needs_object_request():
 def test_unknown_route_is_404():
     code, obj = dispatch(FakeBackend(), "POST", "/nope", {})
     assert code == 404
+
+
+def test_check_ok():
+    code, obj = dispatch(FakeBackend(), "GET", "/check", {})
+    assert code == 200 and obj["origin_hidden"] is True and obj["tor_confirmed"] is True
+
+
+def test_check_not_ready_is_503():
+    code, obj = dispatch(FakeBackend(ready=False), "GET", "/check", {})
+    assert code == 503
+
+
+def test_newnym_ok():
+    b = FakeBackend()
+    code, obj = dispatch(b, "POST", "/newnym", {})
+    assert code == 200 and obj["rotated"] is True and b.rotated is True

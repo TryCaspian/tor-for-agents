@@ -51,7 +51,10 @@ class TorNode:
         self._log(f"launching tor (socks={self.socks_port}) ...")
         self._process = stem.process.launch_tor_with_config(
             config={
-                "SocksPort": str(self.socks_port),
+                # IsolateSOCKSAuth: streams with different SOCKS credentials get
+                # separate circuits, so one agent's traffic is not linkable to
+                # another's by a shared exit. IsolateClientAddr is default-on.
+                "SocksPort": f"{self.socks_port} IsolateSOCKSAuth",
                 "ControlPort": str(self._control_port),
                 "DataDirectory": self._data_dir,
                 "CookieAuthentication": "1",
@@ -125,6 +128,7 @@ class TorNode:
         virtual_port: int = 80,
         timeout: float = 60.0,
         attempts: int = 4,
+        isolation: str | None = None,
     ):
         """Open a raw socket to an onion service through the SOCKS proxy.
 
@@ -142,7 +146,10 @@ class TorNode:
         last_err = None
         for i in range(attempts):
             s = socks.socksocket()
-            s.set_proxy(socks.SOCKS5, "127.0.0.1", self.socks_port, rdns=True)
+            s.set_proxy(
+                socks.SOCKS5, "127.0.0.1", self.socks_port, rdns=True,
+                username=isolation, password=isolation,
+            )
             s.settimeout(per_try)
             try:
                 s.connect((f"{host}.onion", virtual_port))
@@ -158,13 +165,34 @@ class TorNode:
                     time.sleep(2.0 * (i + 1))
         raise ConnectionError(f"could not reach {host}.onion after {attempts} tries: {last_err}")
 
-    def http_client(self, timeout: float = 60.0):
-        """An httpx client whose traffic exits through Tor."""
+    def http_client(self, timeout: float = 60.0, isolation: str | None = None):
+        """An httpx client whose traffic exits through Tor.
+
+        Uses socks5h (DNS resolved at the exit, never locally) and a uniform
+        Tor-Browser header set so the request carries no distinguishing
+        fingerprint. Pass an isolation token to pin traffic to its own
+        circuit.
+        """
         import httpx
 
-        proxy = f"socks5://127.0.0.1:{self.socks_port}"
-        return httpx.Client(proxy=proxy, timeout=timeout)
+        from .anon import proxy_url, browser_headers
 
-    def socks_get(self, url: str, timeout: float = 60.0) -> str:
-        with self.http_client(timeout=timeout) as c:
+        return httpx.Client(
+            proxy=proxy_url(self.socks_port, isolation),
+            timeout=timeout,
+            headers=browser_headers(),
+            follow_redirects=True,
+        )
+
+    def socks_get(self, url: str, timeout: float = 60.0, isolation: str | None = None) -> str:
+        with self.http_client(timeout=timeout, isolation=isolation) as c:
             return c.get(url).text
+
+    def new_identity(self):
+        """Request fresh circuits (Tor's NEWNYM, the 'New Identity' signal).
+        Subsequent connections build new paths through the network."""
+        import stem
+
+        with self._lock:
+            if self._controller is not None:
+                self._controller.signal(stem.Signal.NEWNYM)
