@@ -8,3 +8,7 @@ dist/
 # never commit generated agent keypairs
 *keys*.json
 me.json
+alice.json
+bob.json
+group.json
+*.invite

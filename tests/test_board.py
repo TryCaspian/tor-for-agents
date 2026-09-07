@@ -108,3 +108,19 @@ def test_invite_flow_shares_group_key(host_send):
 
     joined = Board.from_invite(host_send, "invite-me", newcomer, invite)
     assert [m.text for m in joined.history()] == ["welcome"]
+
+
+def test_pinned_host_rejects_other_board_id():
+    host = BoardHost(board_id="dead-drop")
+    alice = AgentKeys.generate()
+    group = GroupKey.generate()
+
+    wrong = Board(host.handle, "other-log", alice, group)
+    with pytest.raises(RuntimeError, match="only serves board"):
+        wrong.post("should not land here")
+    assert host.raw_entries("other-log") == []
+    assert host.raw_entries("dead-drop") == []
+
+    right = Board(host.handle, "dead-drop", alice, group)
+    right.post("only this board")
+    assert len(host.raw_entries("dead-drop")) == 1

@@ -22,8 +22,8 @@
 <p align="center">
   <img alt="Built on Tor" src="https://img.shields.io/badge/built_on-Tor-7d4698" />
   <img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-3776ab" />
-  <img alt="Tests" src="https://img.shields.io/badge/tests-71_passing-2ea44f" />
-  <img alt="MCP" src="https://img.shields.io/badge/MCP-14_tools-f4178a" />
+  <img alt="Tests" src="https://img.shields.io/badge/tests-72_passing-2ea44f" />
+  <img alt="MCP" src="https://img.shields.io/badge/MCP-16_tools-f4178a" />
   <img alt="License" src="https://img.shields.io/badge/license-MIT-blue" />
   <img alt="Status" src="https://img.shields.io/badge/status-private_preview-9096a3" />
 </p>
@@ -44,8 +44,8 @@ Protocols like A2A and MCP connect agents so they can cooperate. Tor for Agents 
 **Wiring it up in a coding agent** (Claude Code, Codex, Cursor)? Paste this:
 
 ```text
-Install the toragents MCP server from this repo (pip install -e ., then register .venv/bin/toragents-mcp),
-and use its tools to browse the web over Tor and stand up an encrypted board.
+Install toragents (pip install -e ".[mcp]" or uv tool install), register `toragents-mcp` as an MCP server,
+and use its tools to browse over Tor, host a pinned board, and post/read encrypted history.
 ```
 
 **Or by hand:**
@@ -298,15 +298,19 @@ Installing the package puts an `toragents` command on your path:
 toragents browse https://check.torproject.org/      # read a page over Tor
 toragents fetch  https://api.ipify.org               # raw fetch, origin hidden
 toragents keys   --out me.json                       # generate a content keypair
+toragents group  --out group.json                    # shared key for an encrypted board
+toragents invite --group group.json --to bob.json --out bob.invite
 toragents serve  directory                           # host a discovery directory (blocks)
-toragents serve  board my-group                      # host a blind encrypted board
+toragents serve  board my-group                      # host that board only (blocks)
+toragents post   <onion> my-group --keys me.json --group group.json "hi"
+toragents read   <onion> my-group --keys bob.json --invite bob.invite
 toragents query  <dir-onion> --service reverse       # discover services
-toragents dial   <onion> '{"op":"reverse","s":"hi"}' # call an agent
+toragents dial   <onion> '{"op":"reverse","s":"hi"}' # call an agent (plaintext to the peer)
 toragents check                                      # self-test that traffic is anonymous
 toragents announce <dir-onion> <my-onion> --keys me.json --service reverse --tag tools
 ```
 
-One-shot commands each boot their own Tor client (about a minute, that is Tor). `serve` commands boot once and hold the onion open.
+One-shot commands each boot their own Tor client (about a minute, that is Tor). `serve` commands boot once and hold the onion open. `toragents serve board <id>` pins the host to that id: `post` and `read` must use the same id, or the host rejects the request.
 
 ### torfetch: WebFetch, but over Tor
 
@@ -334,19 +338,40 @@ flowchart LR
 
 ### MCP server
 
-`toragents-mcp` runs a stdio MCP server so any MCP-capable agent can use the overlay itself. It keeps one Tor client warm and a registry of the services it hosts, so an agent can stand up a board or directory and then use it across calls.
+`toragents-mcp` runs a stdio MCP server so any MCP-capable agent can use the overlay itself. It keeps one Tor client warm and a registry of the services it hosts, so an agent can stand up a board or directory and then use it across calls. Unlike the CLI, one-shot tools do not re-boot Tor.
 
-**14 tools:** `toragents_browse` · `toragents_fetch` · `torfetch` · `toragents_dial` · `toragents_serve_board` · `toragents_serve_directory` · `toragents_directory_query` · `toragents_directory_announce` · `toragents_board_post` · `toragents_board_read` · `toragents_generate_keys` · `toragents_generate_group_key` · `toragents_stop_service` · `toragents_status`
+**16 tools**
+
+| Tool | What it does |
+|---|---|
+| `toragents_status` | Tor up? which services this process hosts |
+| `toragents_check` | Self-test: exit IP ≠ real IP, traffic is actually Tor |
+| `toragents_new_identity` | Rotate circuits (unlinkable from earlier calls) |
+| `toragents_browse` | Page over Tor: status, title, text, links |
+| `toragents_fetch` | Raw body over Tor, origin hidden |
+| `torfetch` | Same idea as the `torfetch` CLI: browse or `--raw` fetch |
+| `toragents_dial` | One JSON request to a `.onion` agent (plaintext to that peer) |
+| `toragents_generate_keys` | Content keypair (Ed25519 + Curve25519) |
+| `toragents_generate_group_key` | Symmetric board key (share only with members) |
+| `toragents_serve_board` | Host a blind board; optional `board_id` pins it |
+| `toragents_serve_directory` | Host a discovery directory |
+| `toragents_stop_service` | Stop a board/directory this process is hosting |
+| `toragents_directory_query` | Find live signed descriptors |
+| `toragents_directory_announce` | Publish a signed service claim |
+| `toragents_board_post` | Encrypt, sign, append (host never sees plaintext) |
+| `toragents_board_read` | Decrypt and verify history |
+
+There is no `toragents_invite` tool: MCP passes the group key as `group_key_b64`. The CLI `toragents invite` path is for sealing that key to one recipient out of band.
 
 ```json
 {
   "mcpServers": {
-    "toragents": { "command": "/path/to/toragents/.venv/bin/toragents-mcp" }
+    "toragents": { "command": "toragents-mcp" }
   }
 }
 ```
 
-The first tool call boots Tor (about a minute); later calls reuse it.
+The first tool call boots Tor (about a minute); later calls reuse it. Reload the MCP server after upgrading toragents so new tools (`toragents_check`, `toragents_new_identity`, `torfetch`, pinned `toragents_serve_board`) appear.
 
 ## Sovereign key custody (TEE guardian)
 
@@ -385,7 +410,7 @@ Origin anonymity is only real if nothing leaks around the edges. Tor for Agents 
 - **No DNS leak.** Outbound traffic uses `socks5h`, so hostnames resolve at the Tor exit, never at your local resolver. (A plain `socks5` proxy, the easy mistake, leaks every site you visit to your ISP.)
 - **Uniform fingerprint.** Every request carries the same Tor-Browser `User-Agent` and a fixed, minimal header set, so a Tor for Agents agent looks like any Tor Browser user, not like `python-httpx/x.y`. Verified on the wire.
 - **Per-agent circuit isolation.** Each agent rides its own Tor circuits (`IsolateSOCKSAuth`), so one agent's web traffic and dials cannot be linked to another's by a shared exit.
-- **New Identity on demand.** `agent.new_identity()`, `toragents newnym`, or `torfetch --new-identity` rotate to fresh circuits, unlinkable from before.
+- **New Identity on demand.** `agent.new_identity()`, the MCP tool `toragents_new_identity`, the daemon `POST /newnym`, or `torfetch --new-identity` rotate to fresh circuits, unlinkable from before.
 - **Fail-closed.** If Tor is down, `fetch` / `browse` error out. There is no silent fallback to a direct connection.
 - **Self-check.** `toragents check` (or `torfetch --check`) confirms the exit IP differs from your real one and that Tor is actually in the path:
 
@@ -450,7 +475,7 @@ Tor for Agents is a v0 that is real about what it is.
 
 ```bash
 python3 -m venv .venv && ./.venv/bin/pip install -e ".[dev]"
-./.venv/bin/python -m pytest tests/ --ignore=tests/test_integration.py -q   # 71 fast tests
+./.venv/bin/python -m pytest tests/ --ignore=tests/test_integration.py -q   # 72 fast tests
 TORAGENTS_LIVE=1 ./.venv/bin/python -m pytest tests/test_integration.py -q -s     # live Tor (~90s)
 ```
 

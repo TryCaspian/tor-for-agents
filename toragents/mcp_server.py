@@ -70,7 +70,12 @@ def toragents_status() -> dict:
     return {
         "tor_running": S.tor is not None,
         "hosted_services": [
-            {"address": a, "kind": v["kind"]} for a, v in S.services.items()
+            {k: x for k, x in {
+                "address": a,
+                "kind": v["kind"],
+                "board_id": v.get("board_id"),
+            }.items() if x}
+            for a, v in S.services.items()
         ],
     }
 
@@ -175,14 +180,24 @@ def toragents_generate_keys() -> dict:
 # ---------------------------------------------------------------------------
 @mcp.tool(
     description="Host a blind encrypted board on the overlay and return its .onion "
-    "address. The host stores only ciphertext; it cannot read messages."
+    "address. The host stores only ciphertext; it cannot read messages. "
+    "If board_id is set, the host rejects post/read for any other id."
 )
-def toragents_serve_board() -> dict:
-    backend = BoardHost()
+def toragents_serve_board(board_id: str = "") -> dict:
+    pinned = board_id or None
+    backend = BoardHost(board_id=pinned)
     agent = S.agent(label="board-host")
     addr = agent.serve(backend.handle)
-    S.services[addr.address] = {"agent": agent, "kind": "board", "backend": backend}
-    return {"address": addr.address, "kind": "board"}
+    S.services[addr.address] = {
+        "agent": agent,
+        "kind": "board",
+        "backend": backend,
+        "board_id": pinned,
+    }
+    out = {"address": addr.address, "kind": "board"}
+    if pinned:
+        out["board_id"] = pinned
+    return out
 
 
 @mcp.tool(

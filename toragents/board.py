@@ -41,8 +41,12 @@ def _canonical(board_id: str, author: dict, ts: float, ct_b64: str) -> bytes:
 # Host: blind, append-only storage. Knows nothing about keys or plaintext.
 # ---------------------------------------------------------------------------
 class BoardHost:
-    def __init__(self):
+    def __init__(self, board_id: str | None = None):
         self._boards: dict[str, list[dict]] = {}
+        # When set, this process serves only that board. `toragents serve board X`
+        # pins X so post/read against a different id are rejected, not silently
+        # stored on a second log the operator never looks at.
+        self.board_id = board_id
 
     def handle(self, request: dict) -> dict:
         op = request.get("op")
@@ -52,10 +56,26 @@ class BoardHost:
             return self._since(request)
         return {"ok": False, "error": f"unknown op {op!r}"}
 
-    def _append(self, request: dict) -> dict:
+    def _resolve_board(self, request: dict):
         board = request.get("board")
+        if self.board_id is not None:
+            if not board:
+                return self.board_id, None
+            if board != self.board_id:
+                return None, {
+                    "ok": False,
+                    "error": f"this host only serves board {self.board_id!r}",
+                }
+        if not isinstance(board, str) or not board:
+            return None, {"ok": False, "error": "board required"}
+        return board, None
+
+    def _append(self, request: dict) -> dict:
+        board, err = self._resolve_board(request)
+        if err:
+            return err
         entry = request.get("entry")
-        if not isinstance(board, str) or not isinstance(entry, dict):
+        if not isinstance(entry, dict):
             return {"ok": False, "error": "board and entry required"}
         log = self._boards.setdefault(board, [])
         seq = len(log) + 1
@@ -64,7 +84,9 @@ class BoardHost:
         return {"ok": True, "seq": seq}
 
     def _since(self, request: dict) -> dict:
-        board = request.get("board")
+        board, err = self._resolve_board(request)
+        if err:
+            return err
         after = int(request.get("after", 0))
         log = self._boards.get(board, [])
         return {"ok": True, "entries": [e for e in log if e["seq"] > after]}

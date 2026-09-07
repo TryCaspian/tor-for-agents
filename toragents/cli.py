@@ -201,10 +201,12 @@ def cmd_serve(args):
     keys = _load_keys(args.keys) if args.keys else AgentKeys.generate()
     agent = Agent(node, label=args.kind, keys=keys)
 
+    pinned_board = None
     if args.kind == "echo":
         handler = lambda req: {"ok": True, "echo": req}
     elif args.kind == "board":
-        handler = BoardHost().handle
+        pinned_board = args.board_id
+        handler = BoardHost(board_id=pinned_board).handle
     elif args.kind == "directory":
         handler = Directory().handle
     else:
@@ -213,6 +215,13 @@ def cmd_serve(args):
 
     addr = agent.serve(handler)
     print(f"\n{args.kind} serving at:\n  {addr.address}\n", flush=True)
+    if pinned_board:
+        print(f"board id: {pinned_board}", flush=True)
+        print(
+            f"post/read must use this id, e.g.\n"
+            f"  toragents post {addr.address} {pinned_board} --keys me.json --group g.json \"hi\"",
+            flush=True,
+        )
     print(f"content fingerprint: {keys.public().fingerprint}", flush=True)
     print("Ctrl-C to stop.", flush=True)
     try:
@@ -327,7 +336,12 @@ def build_parser():
 
     s = sub.add_parser("serve", help="run a service (blocks)")
     s.add_argument("kind", choices=["echo", "board", "directory"])
-    s.add_argument("board_id", nargs="?", default="default")
+    s.add_argument(
+        "board_id",
+        nargs="?",
+        default="default",
+        help="board id this host will serve (used only by `serve board`)",
+    )
     s.add_argument("--keys", help="content keypair file (from `toragents keys`)")
     s.set_defaults(func=cmd_serve)
 
