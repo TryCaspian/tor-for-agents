@@ -1,4 +1,4 @@
-"""anet group demo: an encrypted board with a blind host, over real Tor.
+"""toragents group demo: an encrypted board with a blind host, over real Tor.
 
   Host    runs a BoardHost at an onion address. It stores and serves
           entries but holds no key, so it only ever sees ciphertext.
@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from anet import Agent, TorNode, AgentKeys, GroupKey, Board, BoardHost  # noqa: E402
+from toragents import Agent, TorNode, AgentKeys, GroupKey, Board, BoardHost  # noqa: E402
 
 
 def banner(msg):

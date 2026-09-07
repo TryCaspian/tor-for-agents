@@ -38,7 +38,7 @@ class TorNode:
     def __init__(self, boot_timeout: float = 90.0, log=None):
         self._boot_timeout = boot_timeout
         self._log = log or (lambda m: None)
-        self._data_dir = tempfile.mkdtemp(prefix="anet-tor-")
+        self._data_dir = tempfile.mkdtemp(prefix="toragents-tor-")
         self.socks_port = _free_port()
         self._control_port = _free_port()
         self._process = None

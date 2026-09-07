@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from anet.crypto import AgentKeys, PublicIdentity
-from anet.attest import (
+from toragents.crypto import AgentKeys, PublicIdentity
+from toragents.attest import (
     report_data_for, verify_attestation, dev_validator, AttestationError,
 )
 

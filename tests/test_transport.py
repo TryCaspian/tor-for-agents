@@ -10,7 +10,7 @@ import threading
 
 import pytest
 
-from anet.transport import (
+from toragents.transport import (
     FrameError,
     read_frame,
     write_frame,

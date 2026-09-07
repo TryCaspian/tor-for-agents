@@ -6,12 +6,12 @@ import { tool } from "@opencode-ai/plugin"
  * Drop this file into `.opencode/tools/` (project) or
  * `~/.config/opencode/tools/` (global). The filename is the tool name, so the
  * model can call `torfetch` directly. It shells out to the `torfetch` command
- * from the anet package, which talks to a warm local daemon and boots Tor on
+ * from the toragents package, which talks to a warm local daemon and boots Tor on
  * first use. Because OpenCode exposes this as a harness tool, the user's
  * intent ("read this over Tor") calls Tor directly — the weights do not gate
  * it.
  *
- * Requires: `pip install -e /path/to/anet` so `torfetch` is on PATH, and
+ * Requires: `pip install -e /path/to/toragents` so `torfetch` is on PATH, and
  * `brew install tor`.
  */
 export default tool({

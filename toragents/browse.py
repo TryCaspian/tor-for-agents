@@ -1,6 +1,6 @@
 """Browsing over Tor: an agent's WebFetch.
 
-anet.agent.fetch returns a raw body. This adds a real browsing surface on
+toragents.agent.fetch returns a raw body. This adds a real browsing surface on
 top of the same Tor SOCKS exit: fetch a page (clearnet or .onion, Tor
 resolves both), follow redirects, and get back a structured Page with the
 status, the raw HTML, readable plain text, and the outbound links. This is

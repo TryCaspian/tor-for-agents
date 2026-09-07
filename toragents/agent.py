@@ -8,7 +8,7 @@ An Agent lives on the anonymous overlay. It can:
   - fetch(url): make an outbound clearnet call whose origin is hidden.
 
 Everything an agent says on the wire is the machine-native JSON protocol
-from anet.transport. There is no human-facing surface: no browser page,
+from toragents.transport. There is no human-facing surface: no browser page,
 no forms, just structured messages between agents.
 """
 import base64
@@ -20,7 +20,7 @@ from .identity import Identity
 from .transport import send_message, recv_message, FrameError
 
 VIRTUAL_PORT = 80  # the port other agents dial on the onion address
-WHOAMI_OP = "anet.whoami"  # built-in identity-proof op every agent answers
+WHOAMI_OP = "toragents.whoami"  # built-in identity-proof op every agent answers
 
 
 def make_challenge(n: int = 32) -> bytes:
@@ -87,7 +87,7 @@ class Agent:
     def __init__(self, tor, label: str = "", keys=None, log=None):
         self._tor = tor
         self.label = label
-        # Optional content identity (anet.crypto.AgentKeys). When set, the
+        # Optional content identity (toragents.crypto.AgentKeys). When set, the
         # agent answers the built-in whoami proof so dialers can verify it.
         self.keys = keys
         self._log = log or (lambda m: None)

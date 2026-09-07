@@ -1,7 +1,7 @@
 import { tool } from "@opencode-ai/plugin"
 
 /**
- * tordial — call another agent on the anet overlay by its .onion address.
+ * tordial — call another agent on the toragents overlay by its .onion address.
  *
  * Drop into `.opencode/tools/`. Sends one JSON request to an agent's hidden
  * service over Tor and returns the reply. Pairs with torfetch: torfetch reads
@@ -9,7 +9,7 @@ import { tool } from "@opencode-ai/plugin"
  */
 export default tool({
   description:
-    "Send one JSON request to another agent on the anet overlay at its " +
+    "Send one JSON request to another agent on the toragents overlay at its " +
     ".onion address and return the reply, over Tor, with no traceable origin. " +
     "Use when the user wants to talk to a specific agent/service by its onion " +
     "address.",

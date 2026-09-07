@@ -11,7 +11,7 @@ Two things matter for origin anonymity on the open web, beyond routing:
   2. The request must not carry a distinguishing fingerprint. Tor Browser
      defeats this by making every user look identical: one uniform
      User-Agent (a Windows Firefox ESR string regardless of real OS) and a
-     fixed, minimal header set. We send the same, so an anet agent looks like
+     fixed, minimal header set. We send the same, so an toragents agent looks like
      any Tor Browser user, not like "python-httpx/x.y".
 """
 

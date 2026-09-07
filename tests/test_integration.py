@@ -1,19 +1,19 @@
 """Live integration over a real Tor instance.
 
 Slow: bootstrapping Tor and publishing an onion service takes tens of
-seconds. Skipped unless ANET_LIVE=1 so the fast unit suite stays fast.
+seconds. Skipped unless TORAGENTS_LIVE=1 so the fast unit suite stays fast.
 
-    ANET_LIVE=1 pytest tests/test_integration.py -q -s
+    TORAGENTS_LIVE=1 pytest tests/test_integration.py -q -s
 """
 import os
 
 import pytest
 
-from anet import Agent, TorNode
+from toragents import Agent, TorNode
 
 pytestmark = pytest.mark.skipif(
-    os.environ.get("ANET_LIVE") != "1",
-    reason="set ANET_LIVE=1 to run the live Tor integration test",
+    os.environ.get("TORAGENTS_LIVE") != "1",
+    reason="set TORAGENTS_LIVE=1 to run the live Tor integration test",
 )
 
 

@@ -1,6 +1,6 @@
 """torfetch: WebFetch, but over Tor.
 
-A tiny client that talks to the warm anet daemon (starting it if it is not
+A tiny client that talks to the warm toragents daemon (starting it if it is not
 already running) and prints a page fetched anonymously through Tor. Any
 harness that can run a shell command can call it, so a user's intent, "read
 this over Tor", becomes a direct capability without the model having to
@@ -23,9 +23,9 @@ import time
 import urllib.error
 import urllib.request
 
-HOST = os.environ.get("ANET_DAEMON_HOST", "127.0.0.1")
-PORT = int(os.environ.get("ANET_DAEMON_PORT", "8787"))
-TOKEN = os.environ.get("ANET_DAEMON_TOKEN")
+HOST = os.environ.get("TORAGENTS_DAEMON_HOST", "127.0.0.1")
+PORT = int(os.environ.get("TORAGENTS_DAEMON_PORT", "8787"))
+TOKEN = os.environ.get("TORAGENTS_DAEMON_TOKEN")
 BASE = f"http://{HOST}:{PORT}"
 
 
@@ -51,14 +51,14 @@ def ensure_daemon(boot_timeout=150) -> bool:
     """Make sure the daemon is up and Tor is ready. Spawn it if needed."""
     status = _daemon_status()
     if status is None:
-        # Not running: spawn it detached, logging to ~/.anet/daemon.log.
-        log_dir = os.path.expanduser("~/.anet")
+        # Not running: spawn it detached, logging to ~/.toragents/daemon.log.
+        log_dir = os.path.expanduser("~/.toragents")
         os.makedirs(log_dir, exist_ok=True)
         logf = open(os.path.join(log_dir, "daemon.log"), "ab")
-        print("torfetch: starting anet daemon (first run boots Tor, ~1 min)...",
+        print("torfetch: starting toragents daemon (first run boots Tor, ~1 min)...",
               file=sys.stderr)
         subprocess.Popen(
-            [sys.executable, "-m", "anet.daemon"],
+            [sys.executable, "-m", "toragents.daemon"],
             stdout=logf, stderr=logf, stdin=subprocess.DEVNULL,
             start_new_session=True,
         )
@@ -90,7 +90,7 @@ def main(argv=None):
         return 1
 
     if not ensure_daemon():
-        print("torfetch: daemon did not become ready in time (see ~/.anet/daemon.log)",
+        print("torfetch: daemon did not become ready in time (see ~/.toragents/daemon.log)",
               file=sys.stderr)
         return 3
 

@@ -2,7 +2,7 @@
 
 Exercises the dispatch table's status/error/ok shapes so the HTTP glue on
 top can stay trivial."""
-from anet.daemon import dispatch
+from toragents.daemon import dispatch
 
 
 class FakeBackend:

@@ -1,6 +1,6 @@
 """Anonymity-helper tests. Pure, no network. These guard the two silent
 leaks: local DNS resolution and a distinguishing request fingerprint."""
-from anet.anon import proxy_url, browser_headers, TOR_BROWSER_UA
+from toragents.anon import proxy_url, browser_headers, TOR_BROWSER_UA
 
 
 def test_proxy_url_uses_socks5h_for_remote_dns():

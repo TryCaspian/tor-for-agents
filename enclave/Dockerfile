@@ -1,4 +1,4 @@
-# anet guardian, for EigenCompute (Intel TDX).
+# toragents guardian, for EigenCompute (Intel TDX).
 #
 # The key is generated inside this container at runtime and never leaves, so
 # nothing secret is baked into the image or injected at deploy. Only the
@@ -7,8 +7,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install anet (the guardian imports anet.crypto and anet.attest).
-COPY anet/ /app/anet/
+# Install toragents (the guardian imports toragents.crypto and toragents.attest).
+COPY toragents/ /app/toragents/
 COPY pyproject.toml README.md /app/
 RUN pip install --no-cache-dir . && pip install --no-cache-dir httpx
 
@@ -19,7 +19,7 @@ COPY enclave/guardian.py enclave/policy.py enclave/attestation_platform.py /app/
 ENV PORT=8080
 EXPOSE 8080
 
-# In the enclave, set ANET_TEE=eigencompute and ANET_TEE_QUOTE_ENDPOINT to the
+# In the enclave, set TORAGENTS_TEE=eigencompute and TORAGENTS_TEE_QUOTE_ENDPOINT to the
 # platform's quote mechanism (see EigenCompute attested-API docs). Policy via
-# ANET_GUARDIAN_OPS / ANET_GUARDIAN_RATE / ANET_GUARDIAN_MAX_VALUE.
+# TORAGENTS_GUARDIAN_OPS / TORAGENTS_GUARDIAN_RATE / TORAGENTS_GUARDIAN_MAX_VALUE.
 CMD ["python", "-m", "enclave.guardian"]

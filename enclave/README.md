@@ -1,4 +1,4 @@
-# anet guardian in a TEE (EigenCompute)
+# toragents guardian in a TEE (EigenCompute)
 
 A co-signing guardian that runs inside an Intel TDX enclave on EigenCompute,
 so the human who operates the machine can neither read its key nor silently
@@ -24,7 +24,7 @@ first. Everything here follows those rules.
 ## Run locally (dev, not hardware-backed)
 
 ```bash
-PORT=8091 ANET_DEV_MEASUREMENT=local-test ../.venv/bin/python -m enclave.guardian
+PORT=8091 TORAGENTS_DEV_MEASUREMENT=local-test ../.venv/bin/python -m enclave.guardian
 curl localhost:8091/attestation
 ```
 
@@ -47,15 +47,15 @@ so it can never be mistaken for a real enclave.
    ```
 
 2. **Build and deploy from this Dockerfile** (build context is the repo root,
-   so the image can `COPY anet/`):
+   so the image can `COPY toragents/`):
 
    ```bash
    cd ..                      # repo root
    ecloud deploy --dockerfile enclave/Dockerfile \
-     --env ANET_TEE=eigencompute \
-     --env ANET_TEE_QUOTE_ENDPOINT=<platform quote endpoint from their docs> \
-     --env ANET_GUARDIAN_OPS=cosign_tx \
-     --env ANET_GUARDIAN_RATE=30
+     --env TORAGENTS_TEE=eigencompute \
+     --env TORAGENTS_TEE_QUOTE_ENDPOINT=<platform quote endpoint from their docs> \
+     --env TORAGENTS_GUARDIAN_OPS=cosign_tx \
+     --env TORAGENTS_GUARDIAN_RATE=30
    ```
 
    Do NOT pass any key material as env. The key is generated inside the
@@ -65,12 +65,12 @@ so it can never be mistaken for a real enclave.
    and read the code **measurement / image digest** from the EigenCompute
    Verifiability Dashboard. That measurement is what peers pin.
 
-4. **Pin and verify from anet.** A client fetches the guardian's attestation
+4. **Pin and verify from toragents.** A client fetches the guardian's attestation
    and verifies it against the pinned measurement before trusting it:
 
    ```python
    import httpx
-   from anet.attest import verify_attestation
+   from toragents.attest import verify_attestation
 
    att = httpx.get(f"{guardian_url}/attestation").json()
    verify_attestation(
@@ -81,7 +81,7 @@ so it can never be mistaken for a real enclave.
    )
    ```
 
-   `anet.attest.verify_attestation` checks the two bindings we can check
+   `toragents.attest.verify_attestation` checks the two bindings we can check
    correctly: the measurement equals the pinned one, and the quote's
    `report_data` commits to the public key being presented. The cryptographic
    validity of the TDX quote itself is delegated to EigenCompute's verifier

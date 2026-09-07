@@ -1,4 +1,4 @@
-"""The anet guardian: a co-signing service designed to run inside a TEE.
+"""The toragents guardian: a co-signing service designed to run inside a TEE.
 
 Follows every rule in the key-sovereignty threat model:
 
@@ -26,9 +26,9 @@ import os
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-# anet is installed in the image; crypto + attestation binding come from it.
-from anet.crypto import AgentKeys
-from anet.attest import report_data_for
+# toragents is installed in the image; crypto + attestation binding come from it.
+from toragents.crypto import AgentKeys
+from toragents.attest import report_data_for
 
 sys.path.insert(0, os.path.dirname(__file__))
 from attestation_platform import get_quote  # noqa: E402
@@ -106,12 +106,12 @@ def make_handler(guardian: Guardian):
 
 
 def build_policy() -> Policy:
-    ops = os.environ.get("ANET_GUARDIAN_OPS")  # comma list, or unset = any
+    ops = os.environ.get("TORAGENTS_GUARDIAN_OPS")  # comma list, or unset = any
     return Policy(
         allowed_ops=[o.strip() for o in ops.split(",")] if ops else None,
-        max_per_minute=int(os.environ.get("ANET_GUARDIAN_RATE", "30")),
-        max_value=(float(os.environ["ANET_GUARDIAN_MAX_VALUE"])
-                   if os.environ.get("ANET_GUARDIAN_MAX_VALUE") else None),
+        max_per_minute=int(os.environ.get("TORAGENTS_GUARDIAN_RATE", "30")),
+        max_value=(float(os.environ["TORAGENTS_GUARDIAN_MAX_VALUE"])
+                   if os.environ.get("TORAGENTS_GUARDIAN_MAX_VALUE") else None),
     )
 
 

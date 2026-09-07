@@ -1,4 +1,4 @@
-# anet key sovereignty: threat model and design rules
+# toragents key sovereignty: threat model and design rules
 
 *2026-09-07. Written before building the TEE guardian, to keep the build honest.*
 
@@ -101,7 +101,7 @@ an agent is sovereign to the degree it owns its own substrate.
   in-process, never logged or exported, public key bound into an attestation,
   policy-gated co-signing. Packaged as a Docker image for EigenCompute (Intel
   TDX).
-- `anet/attest.py` — the client side: fetch a guardian's attestation, verify
+- `toragents/attest.py` — the client side: fetch a guardian's attestation, verify
   the quote via EigenCompute's verified channel, check the measurement is the
   pinned one, and check `report_data` binds the advertised public key. Only
   then trust it as a guardian / counterpart.

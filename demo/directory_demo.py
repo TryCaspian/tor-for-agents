@@ -1,4 +1,4 @@
-"""anet directory demo: a stranger arrives and transacts, untracked.
+"""toragents directory demo: a stranger arrives and transacts, untracked.
 
   Directory  runs at an onion address. Agents announce signed descriptors
              of what they offer; anyone can query.
@@ -16,7 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from anet import (  # noqa: E402
+from toragents import (  # noqa: E402
     Agent, TorNode, AgentKeys, Directory, PublicIdentity,
     announce, query, confirm_peer,
 )

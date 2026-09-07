@@ -4,7 +4,7 @@ Tor is slow to start (~1 min) and it is wasteful to pay that on every call.
 This daemon boots one Tor client, keeps it warm, and serves a tiny local
 HTTP API on loopback that the `torfetch` command, the OpenCode tool, or any
 other harness can hit. The security boundary is the loopback bind (and an
-optional ANET_DAEMON_TOKEN); it is meant for the machine the agent runs on.
+optional TORAGENTS_DAEMON_TOKEN); it is meant for the machine the agent runs on.
 
 Endpoints:
   GET  /status              -> {"ok": true, "tor_ready": bool}
@@ -12,16 +12,16 @@ Endpoints:
   POST /browse  {"url"}      -> {"ok": true, "status", "title", "text", "links"}
   POST /dial    {"address","request"} -> {"ok": true, "reply": {...}}
 
-Run:  anet-daemon           (foreground; torfetch will spawn it for you)
+Run:  toragents-daemon           (foreground; torfetch will spawn it for you)
 """
 import json
 import os
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-DEFAULT_HOST = os.environ.get("ANET_DAEMON_HOST", "127.0.0.1")
-DEFAULT_PORT = int(os.environ.get("ANET_DAEMON_PORT", "8787"))
-TOKEN = os.environ.get("ANET_DAEMON_TOKEN")  # optional shared secret
+DEFAULT_HOST = os.environ.get("TORAGENTS_DAEMON_HOST", "127.0.0.1")
+DEFAULT_PORT = int(os.environ.get("TORAGENTS_DAEMON_PORT", "8787"))
+TOKEN = os.environ.get("TORAGENTS_DAEMON_TOKEN")  # optional shared secret
 
 
 class Backend:
@@ -188,10 +188,10 @@ def main():
     import sys
 
     host, port = DEFAULT_HOST, DEFAULT_PORT
-    backend = Backend(log=lambda m: print(f"[anet-daemon] {m}", file=sys.stderr))
+    backend = Backend(log=lambda m: print(f"[toragents-daemon] {m}", file=sys.stderr))
     backend.start()
     server = ThreadingHTTPServer((host, port), make_handler(backend))
-    print(f"[anet-daemon] listening on http://{host}:{port}", file=sys.stderr)
+    print(f"[toragents-daemon] listening on http://{host}:{port}", file=sys.stderr)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

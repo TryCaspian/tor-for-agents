@@ -13,7 +13,7 @@ Trust model:
     entry, only store, withhold, or reorder.
   - A descriptor is a *claim* that content-key K serves address A. The
     binding A<->K is confirmed peer to peer at dial time via an identity
-    proof (see anet.agent.confirm_signature), not taken on the directory's
+    proof (see toragents.agent.confirm_signature), not taken on the directory's
     word. So even a malicious directory cannot make you transact with the
     wrong agent, only fail to introduce you.
   - No membership gate, by design. Spam and Sybil flooding are open

@@ -1,4 +1,4 @@
-"""anet browse demo: an agent browses the web over Tor, like WebFetch.
+"""toragents browse demo: an agent browses the web over Tor, like WebFetch.
 
 Fetches a clearnet page and a .onion service, both through the Tor exit,
 and prints the readable text and links. Origin hidden throughout.
@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from anet import Agent, TorNode  # noqa: E402
+from toragents import Agent, TorNode  # noqa: E402
 
 
 def banner(msg):

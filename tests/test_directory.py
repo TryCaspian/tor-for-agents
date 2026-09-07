@@ -11,8 +11,8 @@ import time
 
 import pytest
 
-from anet.crypto import AgentKeys
-from anet.directory import Directory, Descriptor, build_descriptor
+from toragents.crypto import AgentKeys
+from toragents.directory import Directory, Descriptor, build_descriptor
 
 
 def make_send():
@@ -102,7 +102,7 @@ def test_identity_proof_binds_address_to_key():
     """The peer-side check: an agent proves it holds the content key by
     signing a challenge. This is what a dialer runs after finding an entry,
     so it trusts the address<->key binding without trusting the directory."""
-    from anet.agent import make_challenge, confirm_signature
+    from toragents.agent import make_challenge, confirm_signature
 
     keys = AgentKeys.generate()
     challenge = make_challenge()

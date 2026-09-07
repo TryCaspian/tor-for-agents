@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "anet"
+name = "toragents"
 version = "0.0.5"
 description = "An anonymous, Tor-based overlay for agents: onion-service identity, encrypted groups, discovery, and browsing."
 readme = "README.md"
@@ -21,10 +21,10 @@ mcp = ["mcp[cli]>=2.0"]
 dev = ["pytest>=8", "mcp[cli]>=2.0"]
 
 [project.scripts]
-anet = "anet.cli:main"
-anet-mcp = "anet.mcp_server:main"
-anet-daemon = "anet.daemon:main"
-torfetch = "anet.torfetch:main"
+toragents = "toragents.cli:main"
+toragents-mcp = "toragents.mcp_server:main"
+toragents-daemon = "toragents.daemon:main"
+torfetch = "toragents.torfetch:main"
 
 [tool.setuptools]
-packages = ["anet"]
+packages = ["toragents"]

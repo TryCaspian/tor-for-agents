@@ -1,4 +1,4 @@
-"""Encrypted boards and groups on top of anet.
+"""Encrypted boards and groups on top of toragents.
 
 A board is an append-only log of encrypted, signed entries. A group is the
 set of members who hold the board's key. The BoardHost stores and serves

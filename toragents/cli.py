@@ -1,19 +1,19 @@
-"""anet command-line interface.
+"""toragents command-line interface.
 
 A thin shell over the library. One-shot commands (browse, fetch, dial,
 query) each boot their own Tor client, do the work, and exit; that boot
 costs ~1 minute, which is Tor, not us. Serve commands (echo, board,
 directory) boot Tor and then block, holding the onion address open.
 
-  anet browse <url>                        read a page over Tor
-  anet fetch  <url>                         raw fetch over Tor
-  anet keys   [--out FILE]                  generate a content keypair
-  anet dial   <onion> <json>                send one request to an agent
-  anet serve  echo                          run an echo agent
-  anet serve  board <board_id>              run a blind board host
-  anet serve  directory                     run a discovery directory
-  anet query  <dir_onion> [--service S] [--tag T]   query a directory
-  anet announce <dir_onion> <svc_onion> --keys FILE [--service S ...] [--tag T ...]
+  toragents browse <url>                        read a page over Tor
+  toragents fetch  <url>                         raw fetch over Tor
+  toragents keys   [--out FILE]                  generate a content keypair
+  toragents dial   <onion> <json>                send one request to an agent
+  toragents serve  echo                          run an echo agent
+  toragents serve  board <board_id>              run a blind board host
+  toragents serve  directory                     run a discovery directory
+  toragents query  <dir_onion> [--service S] [--tag T]   query a directory
+  toragents announce <dir_onion> <svc_onion> --keys FILE [--service S ...] [--tag T ...]
 """
 import argparse
 import base64
@@ -27,14 +27,14 @@ from . import (
 
 
 def _err(msg):
-    print(f"anet: {msg}", file=sys.stderr)
+    print(f"toragents: {msg}", file=sys.stderr)
     return 1
 
 
 def _boot(quiet=False):
     log = (lambda m: None) if quiet else (lambda m: print(f"[tor] {m}", file=sys.stderr))
     if not quiet:
-        print("[anet] booting Tor (about a minute the first time)...", file=sys.stderr)
+        print("[toragents] booting Tor (about a minute the first time)...", file=sys.stderr)
     node = TorNode(log=log)
     node.start()
     return node
@@ -193,7 +193,7 @@ def cmd_check(args):
 
 # -- parser ------------------------------------------------------------
 def build_parser():
-    p = argparse.ArgumentParser(prog="anet", description="anonymous overlay for agents")
+    p = argparse.ArgumentParser(prog="toragents", description="anonymous overlay for agents")
     p.add_argument("-q", "--quiet", action="store_true", help="suppress Tor boot logs")
     sub = p.add_subparsers(dest="cmd", required=True)
 
@@ -219,7 +219,7 @@ def build_parser():
     s = sub.add_parser("serve", help="run a service (blocks)")
     s.add_argument("kind", choices=["echo", "board", "directory"])
     s.add_argument("board_id", nargs="?", default="default")
-    s.add_argument("--keys", help="content keypair file (from `anet keys`)")
+    s.add_argument("--keys", help="content keypair file (from `toragents keys`)")
     s.set_defaults(func=cmd_serve)
 
     q = sub.add_parser("query", help="query a directory")

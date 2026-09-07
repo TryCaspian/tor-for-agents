@@ -1,4 +1,4 @@
-"""anet: an anonymous overlay for agents, built on Tor.
+"""toragents: an anonymous overlay for agents, built on Tor.
 
 Every agent is a hidden service. Agents reach each other and the outside
 world with no traceable origin and no observable path. No membership gate

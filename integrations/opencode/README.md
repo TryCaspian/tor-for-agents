@@ -1,4 +1,4 @@
-# anet tools for OpenCode
+# toragents tools for OpenCode
 
 Give an OpenCode agent a `torfetch` (and `tordial`) tool so the user's
 intent, "read this over Tor", "talk to this agent anonymously", calls Tor
@@ -8,9 +8,9 @@ is defined by the environment, not gated by the model's weights.
 ## Install
 
 ```bash
-# 1. Install anet so `torfetch` is on PATH (and Tor is present)
+# 1. Install toragents so `torfetch` is on PATH (and Tor is present)
 brew install tor
-pip install -e /path/to/anet          # provides the `torfetch` command + daemon
+pip install -e /path/to/toragents          # provides the `torfetch` command + daemon
 
 # 2. Drop the tools into OpenCode (project-local or global)
 mkdir -p .opencode/tools
@@ -28,9 +28,9 @@ The filename is the tool name, so the model sees `torfetch` and `tordial`.
 | `tordial` | `{ address, request }` | One JSON request to another agent's `.onion`, over Tor, and its reply. |
 
 Both shell out to the `torfetch` command, which talks to a warm local daemon
-(`anet-daemon`) that keeps one Tor client hot. The first call boots Tor
+(`toragents-daemon`) that keeps one Tor client hot. The first call boots Tor
 (~1 min); every call after is fast. The daemon binds loopback only; set
-`ANET_DAEMON_TOKEN` to require a shared secret.
+`TORAGENTS_DAEMON_TOKEN` to require a shared secret.
 
 ## How it fits together
 
@@ -38,7 +38,7 @@ Both shell out to the `torfetch` command, which talks to a warm local daemon
 OpenCode model
    │  calls tool "torfetch"
    ▼
-torfetch.ts  ──shell──▶  torfetch (CLI)  ──HTTP loopback──▶  anet-daemon
+torfetch.ts  ──shell──▶  torfetch (CLI)  ──HTTP loopback──▶  toragents-daemon
                                                                │ warm Tor
                                                                ▼
                                                           the open web / .onion

@@ -12,8 +12,8 @@ import json
 
 import pytest
 
-from anet.crypto import AgentKeys, GroupKey, CryptoError
-from anet.board import BoardHost, Board
+from toragents.crypto import AgentKeys, GroupKey, CryptoError
+from toragents.board import BoardHost, Board
 
 
 @pytest.fixture

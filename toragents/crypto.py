@@ -1,8 +1,8 @@
-"""Content cryptography for anet, built on libsodium (PyNaCl).
+"""Content cryptography for toragents, built on libsodium (PyNaCl).
 
-anet has two independent identities per agent:
+toragents has two independent identities per agent:
 
-  - a *location* identity: the onion address (from anet.tor / anet.identity).
+  - a *location* identity: the onion address (from toragents.tor / toragents.identity).
     It authenticates the transport endpoint.
   - a *content* identity: the keys here. An Ed25519 signing key proves who
     authored a message, and a Curve25519 box key receives secrets sealed to

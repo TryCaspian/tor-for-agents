@@ -7,7 +7,7 @@ author. The board host only ever sees ciphertext.
 """
 import pytest
 
-from anet.crypto import (
+from toragents.crypto import (
     AgentKeys,
     PublicIdentity,
     GroupKey,

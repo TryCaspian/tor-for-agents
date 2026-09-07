@@ -15,20 +15,20 @@ import os
 def get_quote(report_data: bytes) -> dict:
     """Return an attestation quote committing to report_data.
 
-    Set ANET_TEE=eigencompute in the enclave. The runtime is expected to
-    provide the quote-request mechanism at ANET_TEE_QUOTE_ENDPOINT (an HTTP
+    Set TORAGENTS_TEE=eigencompute in the enclave. The runtime is expected to
+    provide the quote-request mechanism at TORAGENTS_TEE_QUOTE_ENDPOINT (an HTTP
     endpoint or unix socket the platform mounts). We POST the report_data and
     return the platform's quote verbatim. This is the ONE seam that binds to
     EigenCompute's actual runtime; consult their attested-API howto for the
     exact endpoint and set the env var at deploy time.
     """
-    backend = os.environ.get("ANET_TEE", "dev")
+    backend = os.environ.get("TORAGENTS_TEE", "dev")
 
     if backend == "eigencompute":
-        endpoint = os.environ.get("ANET_TEE_QUOTE_ENDPOINT")
+        endpoint = os.environ.get("TORAGENTS_TEE_QUOTE_ENDPOINT")
         if not endpoint:
             raise RuntimeError(
-                "ANET_TEE=eigencompute but ANET_TEE_QUOTE_ENDPOINT is unset; "
+                "TORAGENTS_TEE=eigencompute but TORAGENTS_TEE_QUOTE_ENDPOINT is unset; "
                 "point it at the platform's quote mechanism (see EigenCompute "
                 "attested-API docs)"
             )
@@ -48,6 +48,6 @@ def get_quote(report_data: bytes) -> dict:
     # end-to-end flows work; the client verifier refuses it unless allow_dev.
     return {
         "kind": "dev",
-        "measurement": os.environ.get("ANET_DEV_MEASUREMENT", "dev-measurement-0000"),
+        "measurement": os.environ.get("TORAGENTS_DEV_MEASUREMENT", "dev-measurement-0000"),
         "report_data_hex": report_data.hex(),
     }

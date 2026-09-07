@@ -1,4 +1,4 @@
-"""anet MCP server.
+"""toragents MCP server.
 
 Exposes the anonymous overlay to an MCP client (Claude, etc.) as tools. The
 server process holds one persistent Tor client, started lazily on the first
@@ -6,7 +6,7 @@ tool that needs it (about a minute), and a registry of services it is
 hosting, so an agent can stand up a board or directory and then use it
 across several tool calls.
 
-Run:  anet-mcp        (stdio transport)
+Run:  toragents-mcp        (stdio transport)
 """
 import base64
 import json
@@ -20,12 +20,12 @@ from . import (
 )
 
 mcp = MCPServer(
-    name="anet",
+    name="toragents",
     instructions=(
-        "anet is an anonymous, Tor-based overlay for agents. Every agent is a "
+        "toragents is an anonymous, Tor-based overlay for agents. Every agent is a "
         "hidden service reachable at a .onion address; traffic has no traceable "
-        "origin. Use anet_browse/anet_fetch to read the web anonymously, "
-        "anet_dial to call another agent, anet_serve_* to host a service, and "
+        "origin. Use toragents_browse/toragents_fetch to read the web anonymously, "
+        "toragents_dial to call another agent, toragents_serve_* to host a service, and "
         "the directory tools to publish or discover services. The first tool "
         "call boots Tor and takes about a minute."
     ),
@@ -66,7 +66,7 @@ def _send_to(agent, onion):
 # Status and outbound
 # ---------------------------------------------------------------------------
 @mcp.tool(description="Report whether Tor is up and list services this server hosts.")
-def anet_status() -> dict:
+def toragents_status() -> dict:
     return {
         "tor_running": S.tor is not None,
         "hosted_services": [
@@ -80,7 +80,7 @@ def anet_status() -> dict:
     "that the exit IP differs from the real one. Use to verify the agent is "
     "actually anonymous before doing sensitive work."
 )
-def anet_check() -> dict:
+def toragents_check() -> dict:
     return S.agent().check_anonymity()
 
 
@@ -88,7 +88,7 @@ def anet_check() -> dict:
     description="Rotate to fresh Tor circuits (like Tor Browser's 'New Identity'). "
     "Subsequent requests are unlinkable from earlier ones."
 )
-def anet_new_identity() -> dict:
+def toragents_new_identity() -> dict:
     S.ensure_tor().new_identity()
     return {"ok": True, "rotated": True}
 
@@ -98,7 +98,7 @@ def anet_new_identity() -> dict:
     "title, readable text, and links. Origin is hidden; page content is still "
     "visible to the destination."
 )
-def anet_browse(url: str, text_limit: int = 6000) -> dict:
+def toragents_browse(url: str, text_limit: int = 6000) -> dict:
     page = S.agent().browse(url)
     text = page.text[:text_limit]
     return {
@@ -113,7 +113,7 @@ def anet_browse(url: str, text_limit: int = 6000) -> dict:
 
 
 @mcp.tool(description="Fetch a URL's raw body over Tor with the origin hidden.")
-def anet_fetch(url: str) -> str:
+def toragents_fetch(url: str) -> str:
     return S.agent().fetch(url)
 
 
@@ -143,7 +143,7 @@ def torfetch(url: str, raw: bool = False, text_limit: int = 6000) -> dict:
     description="Send one JSON request to another agent at its .onion address and "
     "return the reply. request_json must be a JSON object."
 )
-def anet_dial(address: str, request_json: str) -> dict:
+def toragents_dial(address: str, request_json: str) -> dict:
     try:
         request = json.loads(request_json)
     except json.JSONDecodeError as e:
@@ -160,7 +160,7 @@ def anet_dial(address: str, request_json: str) -> dict:
     description="Generate a new agent content keypair (Ed25519 signing + Curve25519 "
     "box). Returns base64 secrets and the public identity. Keep the secrets safe."
 )
-def anet_generate_keys() -> dict:
+def toragents_generate_keys() -> dict:
     keys = AgentKeys.generate()
     return {
         "signing": base64.b64encode(bytes(keys._signing)).decode(),
@@ -177,7 +177,7 @@ def anet_generate_keys() -> dict:
     description="Host a blind encrypted board on the overlay and return its .onion "
     "address. The host stores only ciphertext; it cannot read messages."
 )
-def anet_serve_board() -> dict:
+def toragents_serve_board() -> dict:
     backend = BoardHost()
     agent = S.agent(label="board-host")
     addr = agent.serve(backend.handle)
@@ -189,7 +189,7 @@ def anet_serve_board() -> dict:
     description="Host a discovery directory on the overlay and return its .onion "
     "address. Agents announce signed descriptors to it and query for services."
 )
-def anet_serve_directory() -> dict:
+def toragents_serve_directory() -> dict:
     backend = Directory()
     agent = S.agent(label="directory")
     addr = agent.serve(backend.handle)
@@ -198,7 +198,7 @@ def anet_serve_directory() -> dict:
 
 
 @mcp.tool(description="Stop a service this server hosts, by its .onion address.")
-def anet_stop_service(address: str) -> dict:
+def toragents_stop_service(address: str) -> dict:
     svc = S.services.pop(address, None)
     if not svc:
         return {"ok": False, "error": "no such hosted service"}
@@ -213,7 +213,7 @@ def anet_stop_service(address: str) -> dict:
     description="Query a directory (by its .onion address) for live services, "
     "optionally filtered by service name or tag. Returns verified descriptors."
 )
-def anet_directory_query(
+def toragents_directory_query(
     directory_address: str, service: str = "", tag: str = ""
 ) -> dict:
     agent = S.agent()
@@ -228,9 +228,9 @@ def anet_directory_query(
 @mcp.tool(
     description="Announce a service to a directory. Provide the directory's .onion "
     "address, the .onion address you are announcing, your keypair (signing and box "
-    "base64, as from anet_generate_keys), and optional services/tags."
+    "base64, as from toragents_generate_keys), and optional services/tags."
 )
-def anet_directory_announce(
+def toragents_directory_announce(
     directory_address: str,
     my_address: str,
     signing_b64: str,
@@ -260,7 +260,7 @@ def anet_directory_announce(
     "group_key_b64 is the shared board key; author_signing_b64/author_box_b64 are "
     "your content keypair. The host never sees plaintext."
 )
-def anet_board_post(
+def toragents_board_post(
     host_address: str,
     board_id: str,
     group_key_b64: str,
@@ -285,7 +285,7 @@ def anet_board_post(
     description="Read and decrypt the history of an encrypted board. Needs the "
     "board key and a keypair to sign the read handshake."
 )
-def anet_board_read(
+def toragents_board_read(
     host_address: str,
     board_id: str,
     group_key_b64: str,
@@ -319,7 +319,7 @@ def anet_board_read(
     description="Generate a fresh symmetric group/board key (base64). Share it only "
     "with the members you want to admit."
 )
-def anet_generate_group_key() -> dict:
+def toragents_generate_group_key() -> dict:
     return {"group_key": base64.b64encode(GroupKey.generate().material).decode()}
 
 

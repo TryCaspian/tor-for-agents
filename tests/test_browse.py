@@ -1,6 +1,6 @@
 """HTML-to-text extraction tests. Pure, no network. The live browsing over
 Tor is exercised by demo/browse_demo.py."""
-from anet.browse import html_to_text, Page
+from toragents.browse import html_to_text, Page
 
 
 SAMPLE = """

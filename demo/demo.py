@@ -1,4 +1,4 @@
-"""anet demo: two agents meet on the anonymous overlay.
+"""toragents demo: two agents meet on the anonymous overlay.
 
   Bob   runs a "tool" service (reverse a string) at an onion address.
   Alice knows only that address. She dials it over Tor, calls the tool,
@@ -20,7 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from anet import Agent, TorNode  # noqa: E402
+from toragents import Agent, TorNode  # noqa: E402
 
 
 def banner(msg):
