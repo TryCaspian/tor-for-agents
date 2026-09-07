@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anet"
+version = "0.0.4"
+description = "An anonymous, Tor-based overlay for agents: onion-service identity, encrypted groups, discovery, and browsing."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "stem>=1.8",
+    "httpx[socks]>=0.28",
+    "PySocks>=1.7",
+    "PyNaCl>=1.5",
+]
+
+[project.optional-dependencies]
+mcp = ["mcp[cli]>=2.0"]
+dev = ["pytest>=8", "mcp[cli]>=2.0"]
+
+[project.scripts]
+anet = "anet.cli:main"
+anet-mcp = "anet.mcp_server:main"
+
+[tool.setuptools]
+packages = ["anet"]

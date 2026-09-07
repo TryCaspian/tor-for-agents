@@ -1,0 +1,5 @@
+stem>=1.8
+httpx[socks]>=0.28
+PySocks>=1.7
+pytest>=8
+PyNaCl>=1.5
