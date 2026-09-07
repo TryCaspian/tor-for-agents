@@ -23,6 +23,8 @@ dev = ["pytest>=8", "mcp[cli]>=2.0"]
 [project.scripts]
 anet = "anet.cli:main"
 anet-mcp = "anet.mcp_server:main"
+anet-daemon = "anet.daemon:main"
+torfetch = "anet.torfetch:main"
 
 [tool.setuptools]
 packages = ["anet"]

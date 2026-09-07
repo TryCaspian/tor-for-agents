@@ -100,6 +100,28 @@ def anet_fetch(url: str) -> str:
 
 
 @mcp.tool(
+    description="torfetch: like WebFetch, but over Tor. Read a web page (clearnet "
+    "or .onion) with the request origin hidden, and get back the readable text, "
+    "title, and links. Use this whenever the user wants to fetch or read "
+    "something anonymously, over Tor, or a .onion address."
+)
+def torfetch(url: str, raw: bool = False, text_limit: int = 6000) -> dict:
+    agent = S.agent()
+    if raw:
+        return {"ok": True, "body": agent.fetch(url)}
+    page = agent.browse(url)
+    return {
+        "ok": True,
+        "url": page.url,
+        "status": page.status,
+        "title": page.title,
+        "text": page.text[:text_limit],
+        "truncated": len(page.text) > text_limit,
+        "links": page.links[:100],
+    }
+
+
+@mcp.tool(
     description="Send one JSON request to another agent at its .onion address and "
     "return the reply. request_json must be a JSON object."
 )
